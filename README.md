@@ -28,6 +28,8 @@ Version 0.2 (planned):
 	* More commands--auto generate new blog, new post, etc.
 	* Archive by date
 	* Twitter integration
+	* RSS feeds
+	* Fix WP import bugs (tags)
 
 Version 0.1 (2012/5/10):
 	* WordPress import working
