@@ -12,6 +12,9 @@ def main():
     if args.command == 'update':
         config = update.load_config(args.command_arg)
         update.update_all(config)
+    elif args.command == 'wpimport':
+        import wpimport
+        wpimport.main(args.command_arg)
     else:
         print("Unknown command " + args.command)
         sys.exit(1)
