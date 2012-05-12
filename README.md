@@ -1,7 +1,7 @@
 makeblog
 ========
 
-*Note: `makeblog` is still very alpha-quality software. Social media integration and commenting on posts are **not** yet implemented.*
+*Note: `makeblog` is still very alpha-quality software. Social media integration and commenting on posts are *not* yet implemented.*
 
 `makeblog` is a social media-aware static blog generator. It creates a set of HTML blog pages based on Markdown-formatted post files and a configurable set of your recent social media posts.
 
@@ -18,6 +18,11 @@ On the other hand, you would be better off with a different blog platform if you
 
 To make your transition even easier, `makeblog` includes a script to import your existing WordPress blog posts--just dump your SQL database into an XML file (using phpMyAdmin) and run the script!
 
+Special Directories
+===================
+
+* `posts`: holds your MD-formatted blog posts
+* `assets`: holds static assets, copied directly over to final site, except for .scss files which are compiled to CSS first.
 
 
 Changelog
@@ -29,7 +34,7 @@ Version 0.2 (planned):
 	* Archive by date
 	* Twitter integration
 	* RSS feeds
-	* Fix WP import bugs (tags)
+	* DONE Fix WP import bugs (tags)
 
 Version 0.1 (2012/5/10):
 	* WordPress import working

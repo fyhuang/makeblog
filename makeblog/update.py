@@ -13,6 +13,7 @@ from jinja2.exceptions import TemplateNotFound
 from scss import Scss
 
 from post import *
+import twitter
 
 class Config(object):
     def __init__(self, filename, dirname, cp):
@@ -30,6 +31,9 @@ class Config(object):
             return self.get(section, key)
         except (configparser.NoSectionError, configparser.NoOptionError):
             return defaultval
+
+    def getintdef(self, section, key, defaultval):
+        return int(self.getdef(section, key, defaultval))
 
     def pathto(self, path):
         return os.path.join(self.dirname, path)
@@ -50,15 +54,27 @@ def load_config(filename):
 
     return Config(filename, config_dir, cp)
 
-
 def get_all_tags(posts):
     tags = set()
-    for p in posts:
-        for t in p.tags:
-            if t not in tags:
+    for pt,p in posts:
+        if pt == 'twitter':
+            tags.add('twitter')
+        else:
+            for t in p.tags:
                 tags.add(t)
     return tags
 
+def get_all_posts(config):
+    posts = get_blogposts(config)
+    posts += twitter.get_posts(config)
+    posts.sort(key=lambda p: get_dt(p), reverse=True)
+    return posts
+
+def get_dt(pp):
+    if pp[0] == 'blogpost':
+        return pp[1].dt
+    elif pp[0] == 'twitter':
+        return pp[1]['dt']
 
 def makedirs(d):
     try:
@@ -70,20 +86,23 @@ def template_get_asset(config):
     def tga(url):
         return config.get('output', 'prefix').rstrip('/') + '/assets/' + url.lstrip('/')
     return tga
-
 def template_get_url(config):
     def tgu(url):
         return config.get('output', 'prefix').rstrip('/') + '/' + url.lstrip('/')
     return tgu
+def template_ptype_template(templates):
+    def ptt(ptype):
+        return templates[ptype]
+    return ptt
+def template_pretty_date(dt):
+    return dt.strftime("%Y/%m/%d")
 
 def load_templates(config):
     env = Environment(loader=FileSystemLoader(config.pathto('templates')))
-    env.globals['get_asset'] = template_get_asset(config)
-    env.globals['get_url'] = template_get_url(config)
 
     # TODO: support default, etc.
     templates = {}
-    for t in ['index', 'post', 'tag']:
+    for t in ['index', 'blogpost', 'blogpost_page', 'tag']:
         tname = config.get('templates', t)
         if not tname:
             print("Warning: missing template def " + t)
@@ -93,6 +112,19 @@ def load_templates(config):
             templates[t] = env.get_template(tname)
         except TemplateNotFound as e:
             print("Warning: template " + e.name + " not found!")
+
+    # Social templates
+    for s in ['twitter']:
+        tname = config.get('social', s+'_template')
+        try:
+            templates[s] = env.get_template(tname)
+        except TemplateNotFound as e:
+            print("Warning: template " + e.name + " not found!")
+
+    env.globals['get_asset'] = template_get_asset(config)
+    env.globals['get_url'] = template_get_url(config)
+    env.globals['pretty_date'] = template_pretty_date
+    env.globals['ptype_template'] = template_ptype_template(templates)
 
     return templates
 
@@ -124,28 +156,35 @@ def update_assets(config):
 
 def update_index(config, posts=None, templates=None):
     if posts is None:
-        posts = load_all_posts(config)
+        posts = get_all_posts(config)
     if templates is None:
         templates = load_templates(config)
 
     print("Writing index")
-    page_size = config.getdef('output', 'page_size', 10)
+    page_size = config.getintdef('output', 'page_size', 10)
 
-    index_content = templates['index'].render(posts=posts[:page_size])
+    if page_size > 0:
+        pages = posts[:page_size]
+    else:
+        pages = posts
+
+    index_content = templates['index'].render(posts=pages)
     with open(config.outpathto('index.html'), 'w') as f:
         f.write(index_content)
 
 def update_tag(config, tag, posts=None, templates=None):
     if posts is None:
-        posts = load_all_posts(config)
+        posts = get_all_posts(config)
     if templates is None:
         templates = load_templates(config)
 
     print("Writing tag page " + tag)
     matching_posts = []
-    for p in posts:
-        if tag in p.tags:
-            matching_posts.append(p)
+    for pt,p in posts:
+        if pt == 'post' and tag in p.tags:
+            matching_posts.append((pt,p))
+        elif pt == 'twit' and tag == 'twitter':
+            matching_posts.append((pt,p))
     page_content = templates['tag'].render(tag=tag, posts=matching_posts)
 
     makedirs(config.outpathto('tag/'+tag))
@@ -157,16 +196,17 @@ def update_all(config):
 
     update_assets(config)
 
-    posts = load_all_posts(config)
+    posts = get_all_posts(config)
     templates = load_templates(config)
 
     print("Writing posts")
-    for post in posts:
+    for (ptype, post) in posts:
+        if ptype != 'blogpost': continue
         date_dir = config.outpathto(post.dt.strftime('%Y/%m'))
         post_dir = os.path.join(date_dir, post.slug)
         makedirs(post_dir)
 
-        tpl_content = templates['post'].render(post=post)
+        tpl_content = templates['blogpost_page'].render(post=post)
         html_fname = os.path.join(post_dir, 'index.html')
         with open(html_fname, 'w') as hf:
             hf.write(tpl_content)

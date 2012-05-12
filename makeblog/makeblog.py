@@ -15,6 +15,11 @@ def main():
     elif args.command == 'wpimport':
         import wpimport
         wpimport.main(args.command_arg)
+    elif args.command == 'refresh':
+        config = update.load_config(args.command_arg)
+
+        import twitter
+        twitter.refresh_tweets(config)
     else:
         print("Unknown command " + args.command)
         sys.exit(1)

@@ -52,7 +52,7 @@ def main(db_file=None):
         tid_e = tr.find('term_taxonomy_id')
         if int(tid_e.text) in taxonomies:
             term_id = taxonomies[int(tid_e.text)]
-            post_tags[int(oid_e.text)].append(terms[term_id])
+            post_tags[int(oid_e.text)].append(term_id)
 
 
     url_nonchars_re = re.compile('[^\w\-&=]')
@@ -72,7 +72,8 @@ def main(db_file=None):
         status_e = p.find('post_status')
         title_e = p.find('post_title')
 
-        tag_names_list = [tags[t] for t in post_tags[int(pid_e.text)] if t in tags and tags[t] != 'uncategorized']
+        tag_names_list = [terms[t] for t in post_tags[int(pid_e.text)] if t in terms and terms[t] != 'uncategorized']
+        tag_names_list = list(set(tag_names_list))
         tag_names = '[' + ', '.join(tag_names_list) + ']'
 
         header_block = '---\n' + \
@@ -105,7 +106,7 @@ def main(db_file=None):
             #f.write(title_block)
             f.write(content_text)
             f.write('\n')
-            print("Wrote post", title_e.text)
+            print("Wrote post " + title_e.text)
 
 if __name__ == "__main__":
     main()

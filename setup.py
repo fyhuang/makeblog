@@ -14,5 +14,5 @@ setup(name='makeblog',
               ],
           },
 
-      install_requires=['jinja2', 'Markdown', 'PyYAML', 'pyScss'],
+      install_requires=['jinja2', 'Markdown', 'PyYAML', 'pyScss', 'requests'],
       )

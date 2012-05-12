@@ -54,22 +54,6 @@ class Post(object):
                     header_lines.append(line)
         self.meta = yaml.load(''.join(header_lines))
 
-    def get_pretty_date(self):
-        day_fmt = str(self.dt.strftime('%d')).lstrip('0')
-        if len(day_fmt) == 2 and day_fmt[-2] == '1':
-            day_fmt += 'th'
-        else:
-            if day_fmt[-1] == '1':
-                day_fmt += 'st'
-            elif day_fmt[-1] == '2':
-                day_fmt += 'nd'
-            elif day_fmt[-1] == '3':
-                day_fmt += 'rd'
-            else:
-                day_fmt += 'th'
-
-        return '{} {}, {}'.format(self.dt.strftime('%B'), day_fmt, self.dt.strftime('%Y'))
-
     def get_url(self):
         return self.dt.strftime('%Y/%m/') + self.slug + '/'
 
@@ -103,11 +87,14 @@ class Post(object):
                     return self.md(content[:pix])
             return self.md(content[:cix])
 
-def load_all_posts(config):
+def get_blogposts(config):
     posts = []
     for (dirpath, dirnames, filenames) in os.walk(config.pathto('posts')):
         for f in filenames:
+            if f[-2:] != 'md':
+                print("Skipping " + f)
+                continue
+            print("Loading post " + f)
             post = Post(os.path.join(dirpath, f), config)
             posts.append(post)
-    posts.sort(key=lambda p: p.dt, reverse=True)
-    return posts
+    return [('blogpost',p) for p in posts]
