@@ -13,6 +13,8 @@ from jinja2.exceptions import TemplateNotFound
 from scss import Scss
 
 from post import *
+import utils
+import template_fns
 import twitter
 
 class Config(object):
@@ -82,21 +84,6 @@ def makedirs(d):
     except os.error:
         pass
 
-def template_get_asset(config):
-    def tga(url):
-        return config.get('output', 'prefix').rstrip('/') + '/assets/' + url.lstrip('/')
-    return tga
-def template_get_url(config):
-    def tgu(url):
-        return config.get('output', 'prefix').rstrip('/') + '/' + url.lstrip('/')
-    return tgu
-def template_ptype_template(templates):
-    def ptt(ptype):
-        return templates[ptype]
-    return ptt
-def template_pretty_date(dt):
-    return dt.strftime("%Y/%m/%d")
-
 def load_templates(config):
     env = Environment(loader=FileSystemLoader(config.pathto('templates')))
 
@@ -121,10 +108,10 @@ def load_templates(config):
         except TemplateNotFound as e:
             print("Warning: template " + e.name + " not found!")
 
-    env.globals['get_asset'] = template_get_asset(config)
-    env.globals['get_url'] = template_get_url(config)
-    env.globals['pretty_date'] = template_pretty_date
-    env.globals['ptype_template'] = template_ptype_template(templates)
+    env.globals['get_asset'] = template_fns.template_get_asset(config)
+    env.globals['get_url'] = template_fns.template_get_url(config)
+    env.globals['pretty_date'] = template_fns.template_pretty_date
+    env.globals['ptype_template'] = template_fns.template_ptype_template(templates)
 
     return templates
 
@@ -164,7 +151,7 @@ def update_index(config, posts=None, templates=None):
     page_size = config.getintdef('output', 'page_size', 10)
 
     if page_size > 0:
-        pages = posts[:page_size]
+        pages = utils.first_posts(posts, page_size)
     else:
         pages = posts
 
@@ -181,9 +168,9 @@ def update_tag(config, tag, posts=None, templates=None):
     print("Writing tag page " + tag)
     matching_posts = []
     for pt,p in posts:
-        if pt == 'post' and tag in p.tags:
+        if pt == 'blogpost' and tag in p.tags:
             matching_posts.append((pt,p))
-        elif pt == 'twit' and tag == 'twitter':
+        elif pt == tag:
             matching_posts.append((pt,p))
     page_content = templates['tag'].render(tag=tag, posts=matching_posts)
 

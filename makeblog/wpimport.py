@@ -20,6 +20,8 @@ from datetime import datetime
 
 import xml.etree.ElementTree as xml
 
+import utils
+
 def main(db_file=None):
     if db_file is None:
         db_file = sys.argv[1]
@@ -82,8 +84,7 @@ def main(db_file=None):
                 '---\n\n'
         #title_block = title_e.text + '\n' + ''.join('=' for i in range(len(title_e.text))) + '\n\n'
 
-        slug = url_nonchars_re.sub('-', title_e.text).strip('-')
-        slug = multiple_dashes_re.sub('-', slug).lower()
+        slug = utils.title_to_slug(title_e.text)
 
         dt = datetime.strptime(date_e.text, '%Y-%m-%d %H:%M:%S')
         post_fname = dt.strftime('%Y-%m-%d-%H-%M-') + slug + '.md'

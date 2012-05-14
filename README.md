@@ -29,11 +29,16 @@ Changelog
 =========
 
 ~~~
+Version 0.3 (planned):
+    * Commenting
+    * Almost-static -- update pages on command, etc.
+
 Version 0.2 (planned):
-	* More commands--auto generate new blog, new post, etc.
+	* More commands--auto generate new blog, etc.
 	* Archive by date
-	* Twitter integration
 	* RSS feeds
+    * DONE new post command
+	* DONE Twitter integration
 	* DONE Fix WP import bugs (tags)
 
 Version 0.1 (2012/5/10):
