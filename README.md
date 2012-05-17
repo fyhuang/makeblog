@@ -32,6 +32,7 @@ Changelog
 Version 0.3 (planned):
     * Commenting
     * Almost-static -- update pages on command, etc.
+    * Tutorial on how to use makeblog
 
 Version 0.2 (planned):
 	* More commands--auto generate new blog, etc.

@@ -11,7 +11,7 @@ def main():
     parser.add_argument('command_arg')
     args = parser.parse_args()
 
-    if args.command == 'update':
+    if args.command == 'compile':
         config = update.load_config(args.command_arg)
         update.update_all(config)
     elif args.command == 'wpimport':

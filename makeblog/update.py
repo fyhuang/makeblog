@@ -112,6 +112,7 @@ def load_templates(config):
     env.globals['get_url'] = template_fns.template_get_url(config)
     env.globals['pretty_date'] = template_fns.template_pretty_date
     env.globals['ptype_template'] = template_fns.template_ptype_template(templates)
+    env.globals['linkify_tweet'] = template_fns.template_linkify_tweet
 
     return templates
 
