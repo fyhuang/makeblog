@@ -1,5 +1,8 @@
 # Functions used inside templates
 
+import datetime
+import pytz
+
 def template_get_asset(config):
     def tga(url):
         return config.get('output', 'prefix').rstrip('/') + '/assets/' + url.lstrip('/')
@@ -32,3 +35,9 @@ def template_linkify_tweet(tweet):
         link = '<a href="{}">{}</a>'.format(real_url, short_real_url)
         text = text.replace(tco_url, link)
     return text
+
+def template_utcnow():
+    return datetime.datetime.now(pytz.utc)
+
+def template_dt_iso(dt):
+    return dt.strftime('%Y-%m-%dT%H:%M:%S%z')

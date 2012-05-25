@@ -29,7 +29,7 @@ def refresh_tweets(config):
         with open(tweets_file) as f:
             tweets = yaml.load(f.read())
 
-    params = {'screen_name': config.get('social', 'twitter_username'),
+    params = {'screen_name': config.get('twitter', 'username'),
             'trim_user': 1,}
     if len(tweets) > 0:
         params['since_id'] = tweets[0]['id']

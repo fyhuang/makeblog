@@ -1,82 +1,18 @@
-try:
-    import configparser
-except ImportError:
-    import ConfigParser as configparser
-
 import os
 import os.path
 import sys
 import shutil
+import datetime
 
 from jinja2 import Environment, FileSystemLoader
 from jinja2.exceptions import TemplateNotFound
 from scss import Scss
 
 from post import *
+from data import *
 import utils
 import template_fns
 import twitter
-
-class Config(object):
-    def __init__(self, filename, dirname, cp):
-        self.cp = cp
-        self.filename = filename
-        self.dirname = dirname
-
-        self.outputdir = os.path.normpath(os.path.join(self.dirname, cp.get('output', 'outputdir')))
-
-    def get(self, section, key):
-        return self.cp.get(section, key)
-
-    def getdef(self, section, key, defaultval):
-        try:
-            return self.get(section, key)
-        except (configparser.NoSectionError, configparser.NoOptionError):
-            return defaultval
-
-    def getintdef(self, section, key, defaultval):
-        return int(self.getdef(section, key, defaultval))
-
-    def pathto(self, path):
-        return os.path.join(self.dirname, path)
-
-    def outpathto(self, path):
-        result = os.path.join(self.outputdir, path)
-        return result
-
-def load_config(filename):
-    config_dir = os.path.dirname(os.path.abspath(filename))
-
-    cp = configparser.SafeConfigParser()
-    cp.read(filename)
-
-    if not cp.get('output', 'wordpress_compat'):
-        print("TODO: needs wordpress_compat")
-        sys.exit(1)
-
-    return Config(filename, config_dir, cp)
-
-def get_all_tags(posts):
-    tags = set()
-    for pt,p in posts:
-        if pt == 'twitter':
-            tags.add('twitter')
-        else:
-            for t in p.tags:
-                tags.add(t)
-    return tags
-
-def get_all_posts(config):
-    posts = get_blogposts(config)
-    posts += twitter.get_posts(config)
-    posts.sort(key=lambda p: get_dt(p), reverse=True)
-    return posts
-
-def get_dt(pp):
-    if pp[0] == 'blogpost':
-        return pp[1].dt
-    elif pp[0] == 'twitter':
-        return pp[1]['dt']
 
 def makedirs(d):
     try:
@@ -89,7 +25,7 @@ def load_templates(config):
 
     # TODO: support default, etc.
     templates = {}
-    for t in ['index', 'blogpost', 'blogpost_page', 'tag']:
+    for t in ['index', 'blogpost_page', 'tag_archive', 'atom_feed', 'dt_archive']:
         tname = config.get('templates', t)
         if not tname:
             print("Warning: missing template def " + t)
@@ -102,7 +38,7 @@ def load_templates(config):
 
     # Social templates
     for s in ['twitter']:
-        tname = config.get('social', s+'_template')
+        tname = config.get(s, 'template')
         try:
             templates[s] = env.get_template(tname)
         except TemplateNotFound as e:
@@ -113,6 +49,9 @@ def load_templates(config):
     env.globals['pretty_date'] = template_fns.template_pretty_date
     env.globals['ptype_template'] = template_fns.template_ptype_template(templates)
     env.globals['linkify_tweet'] = template_fns.template_linkify_tweet
+
+    env.globals['utcnow'] = template_fns.template_utcnow
+    env.globals['dt_iso'] = template_fns.template_dt_iso
 
     return templates
 
@@ -142,53 +81,90 @@ def update_assets(config):
                 print("Copying {} to {}".format(sfn, dfn))
                 shutil.copyfile(sfn, dfn)
 
-def update_index(config, posts=None, templates=None):
+def update_posts_page(config,
+        tpl_name,
+        out_name,
+        selector=lambda (pt,p): True,
+        maxnum=0,
+        extra_params={},
+        posts=None, templates=None):
     if posts is None:
-        posts = get_all_posts(config)
+        posts = Posts(config)
     if templates is None:
         templates = load_templates(config)
 
-    print("Writing index")
+    print("Generating from {}".format(tpl_name))
+    filt_posts = [p for p in posts.posts if selector(p)]
+    if maxnum > 0:
+        filt_posts = utils.first_posts(filt_posts, maxnum)
+
+    outfilename = config.outpathto(out_name)
+    makedirs(os.path.dirname(outfilename))
+
+    page_content = templates[tpl_name].render(posts=filt_posts, **extra_params)
+    with open(config.outpathto(out_name), 'w') as f:
+        f.write(page_content)
+
+
+def update_index(config, posts=None, templates=None):
     page_size = config.getintdef('output', 'page_size', 10)
-
-    if page_size > 0:
-        pages = utils.first_posts(posts, page_size)
-    else:
-        pages = posts
-
-    index_content = templates['index'].render(posts=pages)
-    with open(config.outpathto('index.html'), 'w') as f:
-        f.write(index_content)
+    print("Writing index")
+    update_posts_page(config,
+            'index',
+            'index.html',
+            maxnum=page_size,
+            posts=posts, templates=templates)
 
 def update_tag(config, tag, posts=None, templates=None):
-    if posts is None:
-        posts = get_all_posts(config)
-    if templates is None:
-        templates = load_templates(config)
+    def match(ptp):
+        (pt,p) = ptp
+        if pt == 'blogpost' and tag in p.tags:
+            return True
+        elif pt == tag:
+            return True
+        return False
 
     print("Writing tag page " + tag)
-    matching_posts = []
-    for pt,p in posts:
-        if pt == 'blogpost' and tag in p.tags:
-            matching_posts.append((pt,p))
-        elif pt == tag:
-            matching_posts.append((pt,p))
-    page_content = templates['tag'].render(tag=tag, posts=matching_posts)
+    update_posts_page(config,
+            'tag_archive',
+            'tag/'+tag+'/index.html',
+            match,
+            extra_params={'tag': tag},
+            posts=posts, templates=templates)
 
-    makedirs(config.outpathto('tag/'+tag))
-    with open(config.outpathto('tag/'+tag+'/index.html'), 'w') as f:
-        f.write(page_content)
+def update_feed(config, name, posts=None, templates=None):
+    print("Updating Atom feed")
+    update_posts_page(config,
+            name+"_feed",
+            'feed/'+name+'.xml',
+            maxnum=20,
+            posts=posts, templates=templates)
+
+def update_dt_archive(config, year, month, posts=None, templates=None):
+    def match(ptp):
+        dt = get_dt(ptp)
+        if dt.year == year and dt.month == month:
+            return True
+        return False
+
+    print("Updating archive for {:02}/{}".format(month, year))
+    update_posts_page(config,
+            'dt_archive',
+            '{}/{:02}/index.html'.format(year, month),
+            match,
+            extra_params={'month': month, 'year': year},
+            posts=posts, templates=templates)
 
 def update_all(config):
     makedirs(config.outpathto(''))
 
     update_assets(config)
 
-    posts = get_all_posts(config)
+    posts = Posts(config)
     templates = load_templates(config)
 
     print("Writing posts")
-    for (ptype, post) in posts:
+    for (ptype, post) in posts.posts:
         if ptype != 'blogpost': continue
         date_dir = config.outpathto(post.dt.strftime('%Y/%m'))
         post_dir = os.path.join(date_dir, post.slug)
@@ -201,6 +177,24 @@ def update_all(config):
 
     update_index(config, posts, templates)
 
-    tags = get_all_tags(posts)
+    tags = posts.all_tags
     for t in tags:
         update_tag(config, t, posts, templates)
+
+    update_feed(config, 'atom', posts, templates)
+
+    # Update date archive
+    last_dt = datetime.datetime(1960,01,01)
+    for pp in posts.posts:
+        dt = get_dt(pp)
+        if dt.month != last_dt.month or dt.year != last_dt.year:
+            update_dt_archive(config, dt.year, dt.month, posts, templates)
+        last_dt = dt
+
+    htaccess_data = """<Files "atom.xml">
+    ForceType application/atom+xml
+</Files>
+DirectoryIndex atom.xml
+"""
+    with open(config.outpathto('feed/.htaccess'), 'w') as f:
+        f.write(htaccess_data)

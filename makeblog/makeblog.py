@@ -3,6 +3,7 @@ import argparse
 from datetime import datetime
 
 import update
+import config as cf
 import utils
 
 def main():
@@ -12,16 +13,19 @@ def main():
     args = parser.parse_args()
 
     if args.command == 'compile':
-        config = update.load_config(args.command_arg)
+        config = cf.load_config(args.command_arg)
         update.update_all(config)
+
     elif args.command == 'wpimport':
         import wpimport
         wpimport.main(args.command_arg)
+
     elif args.command == 'refresh':
-        config = update.load_config(args.command_arg)
+        config = cf.load_config(args.command_arg)
 
         import twitter
         twitter.refresh_tweets(config)
+
     elif args.command == 'newpost':
         title = args.command_arg
         slug = utils.title_to_slug(title)
@@ -34,6 +38,9 @@ def main():
 
         import subprocess
         subprocess.call(['open', fname])
+
+    elif args.command == 'edit' or args.command == 'editpost':
+        pass
     else:
         print("Unknown command " + args.command)
         sys.exit(1)

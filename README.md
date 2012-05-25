@@ -44,13 +44,18 @@ Changelog
 ~~~
 Version 0.3 (planned):
     * Commenting
+    * WP import comments
     * Almost-static -- update pages on command, etc.
     * Tutorial on how to use makeblog
+    * Clean up config file structure
+    * Friendlier user-interface
+    * Make editor configurable
+    * Generate new blog command
+	* Edit blog post command
 
 Version 0.2 (planned):
-	* More commands--auto generate new blog, etc.
-	* Archive by date
-	* RSS feeds
+	* DONE Archive by date
+	* DONE RSS feeds
     * DONE new post command
 	* DONE Twitter integration
 	* DONE Fix WP import bugs (tags)
