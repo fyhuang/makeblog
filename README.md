@@ -53,12 +53,12 @@ Version 0.3 (planned):
     * Generate new blog command
 	* Edit blog post command
 
-Version 0.2 (planned):
-	* DONE Archive by date
-	* DONE RSS feeds
-    * DONE new post command
-	* DONE Twitter integration
-	* DONE Fix WP import bugs (tags)
+Version 0.2 (2012/5/25):
+	* Archive by date
+	* RSS feeds
+    * New post command
+	* Twitter integration
+	* Fix WP import bugs (tags)
 
 Version 0.1 (2012/5/10):
 	* WordPress import working
