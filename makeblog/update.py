@@ -25,7 +25,7 @@ def load_templates(config):
 
     # TODO: support default, etc.
     templates = {}
-    for t in ['index', 'blogpost_page', 'tag_archive', 'atom_feed', 'dt_archive']:
+    for t in ['index', 'blogpost_page', 'tag_archive', 'atom_feed', 'dt_archive', 'page']:
         tname = config.get('templates', t)
         if not tname:
             print("Warning: missing template def " + t)
@@ -55,6 +55,14 @@ def load_templates(config):
 
     return templates
 
+def load_pages(config):
+    import glob
+    pages = []
+    for f in glob.glob(config.pathto('pages')+'/*.md'):
+        page = Post(f,config)
+        pages.append(page)
+    return pages
+
 def update_assets(config):
     adir = config.pathto('assets')
     if not os.path.exists(adir):
@@ -80,6 +88,23 @@ def update_assets(config):
             else:
                 print("Copying {} to {}".format(sfn, dfn))
                 shutil.copyfile(sfn, dfn)
+
+def update_pages(config, pages=None, templates=None):
+    if pages is None:
+        pass
+    if templates is None:
+        templates = load_templates(config)
+
+    print("Generating pages")
+    for p in pages:
+        title = p.title
+        html_content = p.get_html_content()
+        page_content = templates['page'].render(title=title, html_content=html_content)
+        raw_outname = p.slug + '/index.html'
+        outname = config.outpathto(raw_outname)
+        makedirs(os.path.dirname(outname))
+        with open(outname, 'w') as f:
+            f.write(page_content)
 
 def update_posts_page(config,
         tpl_name,
@@ -181,7 +206,15 @@ def update_all(config):
     for t in tags:
         update_tag(config, t, posts, templates)
 
+    # Atom feed
     update_feed(config, 'atom', posts, templates)
+    htaccess_data = """<Files "atom.xml">
+    ForceType application/atom+xml
+</Files>
+DirectoryIndex atom.xml
+"""
+    with open(config.outpathto('feed/.htaccess'), 'w') as f:
+        f.write(htaccess_data)
 
     # Update date archive
     last_dt = datetime.datetime(1960,01,01)
@@ -191,10 +224,6 @@ def update_all(config):
             update_dt_archive(config, dt.year, dt.month, posts, templates)
         last_dt = dt
 
-    htaccess_data = """<Files "atom.xml">
-    ForceType application/atom+xml
-</Files>
-DirectoryIndex atom.xml
-"""
-    with open(config.outpathto('feed/.htaccess'), 'w') as f:
-        f.write(htaccess_data)
+    # Pages
+    pages = load_pages(config)
+    update_pages(config, pages, templates)

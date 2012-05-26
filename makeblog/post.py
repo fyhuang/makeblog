@@ -1,3 +1,4 @@
+import re
 import os.path
 from datetime import datetime
 
@@ -21,6 +22,8 @@ def count_chars(content, num):
             return i
     return len(content)-1
 
+date_re = re.compile('\d{4}-\d{2}-\d{2}(-\d{2}-\d{2})?')
+
 class Post(object):
     def __init__(self, fname, config):
         self.config = config
@@ -28,7 +31,12 @@ class Post(object):
         bname = os.path.basename(fname)
         # TODO
         dt_str = bname[:16]
-        self.slug = bname[17:-3]
+        if date_re.match(dt_str):
+            self.dt = datetime.strptime(dt_str, '%Y-%m-%d-%H-%M')
+            self.slug = bname[17:-3]
+        else:
+            self.dt = datetime.fromtimestamp(os.path.getmtime(fname))
+            self.slug = os.path.splitext(bname)[0]
 
         # Read the YAML header
         self.read_header()
@@ -37,8 +45,10 @@ class Post(object):
         self.tags = []
         if 'tags' in self.meta:
             self.tags = self.meta['tags']
+        if 'date' in self.meta:
+            # TODO
+            self.dt = datetime.strptime(self.meta['date'], '%Y-%m-%d')
 
-        self.dt = datetime.strptime(dt_str, '%Y-%m-%d-%H-%M')
 
     def read_header(self):
         in_header = False
