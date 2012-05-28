@@ -44,6 +44,8 @@ def load_templates(config):
         except TemplateNotFound as e:
             print("Warning: template " + e.name + " not found!")
 
+    env.globals['user_options'] = config.get_user_options()
+
     env.globals['get_asset'] = template_fns.template_get_asset(config)
     env.globals['get_url'] = template_fns.template_get_url(config)
     env.globals['pretty_date'] = template_fns.template_pretty_date
@@ -62,6 +64,9 @@ def load_pages(config):
         page = Post(f,config)
         pages.append(page)
     return pages
+
+def render_template(name, templates):
+    pass
 
 def update_assets(config):
     adir = config.pathto('assets')

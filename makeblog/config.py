@@ -4,6 +4,7 @@ except ImportError:
     import ConfigParser as configparser
 
 import os.path
+import collections
 
 class Config(object):
     def __init__(self, filename, dirname, cp):
@@ -31,6 +32,15 @@ class Config(object):
     def outpathto(self, path):
         result = os.path.join(self.outputdir, path)
         return result
+
+    
+    def get_user_options(self):
+        res = collections.defaultdict(lambda: None)
+        if not self.cp.has_section('user_options'):
+            return res
+        for (name, val) in self.cp.items('user_options'):
+            res[name] = val
+        return res
 
 def load_config(filename):
     config_dir = os.path.dirname(os.path.abspath(filename))
