@@ -2,7 +2,7 @@ import sys
 import argparse
 from datetime import datetime
 
-import update
+import compileblog
 import config as cf
 import utils
 
@@ -14,7 +14,7 @@ def main():
 
     if args.command == 'compile':
         config = cf.load_config(args.command_arg)
-        update.update_all(config)
+        compileblog.compile_all(config)
 
     elif args.command == 'wpimport':
         import wpimport
@@ -30,7 +30,7 @@ def main():
         title = args.command_arg
         slug = utils.title_to_slug(title)
         now = datetime.utcnow()
-        fname = 'posts/{}-{}.md'.format(now.strftime('%Y-%m-%d-%H-%M'), slug)
+        fname = 'drafts/{}-{}.md'.format(now.strftime('%Y-%m-%d-%H-%M'), slug)
         with open(fname, 'w') as f:
             f.write('---\ntitle: "')
             f.write(title)
@@ -40,6 +40,10 @@ def main():
         subprocess.call(['open', fname])
 
     elif args.command == 'edit' or args.command == 'editpost':
+        # TODO
+        pass
+    elif args.command == 'publish':
+        # TODO
         pass
     else:
         print("Unknown command " + args.command)
