@@ -8,11 +8,21 @@ setup(name='makeblog',
       url='https://github.com/fyhuang/makeblog',
 
       packages=['makeblog'],
+      package_data={'makeblog': [
+          'blog_template/*',
+          ]},
       entry_points={
           'console_scripts': [
               'makeblog = makeblog.makeblog:main',
               ],
           },
 
-      install_requires=['jinja2', 'Markdown', 'PyYAML', 'pyScss', 'requests', 'pytz'],
+      install_requires=[
+          'jinja2',
+          'Markdown',
+          'PyYAML',
+          'pyScss',
+          'requests',
+          'pytz',
+          'Flask'],
       )

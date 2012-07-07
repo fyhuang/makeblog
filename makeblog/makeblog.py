@@ -3,6 +3,7 @@ import argparse
 from datetime import datetime
 
 import compileblog
+import server
 import config as cf
 import utils
 
@@ -45,6 +46,13 @@ def main():
     elif args.command == 'publish':
         # TODO
         pass
+
+
+    elif args.command == 'serve':
+        config = cf.load_config(args.command_arg)
+        config.is_dynamic = True
+        server.serve(config)
+
     else:
         print("Unknown command " + args.command)
         sys.exit(1)

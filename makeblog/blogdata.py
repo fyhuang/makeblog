@@ -1,12 +1,17 @@
+import os.path
 import datetime
 import glob
+import threading
 
+import yaml
 from jinja2 import Environment, FileSystemLoader
 from jinja2.exceptions import TemplateNotFound
 
 import post
 import twitter
 import template_fns
+
+COMMENTS_FILENAME='dynamic/comments.yaml'
 
 def get_dt(pp):
     if pp[0] == 'blogpost':
@@ -19,6 +24,8 @@ class Blogdata(object):
     
     def __init__(self, config):
         self.config = config
+        self.is_dynamic = config.is_dynamic # TODO
+        self.comment_lock = threading.Lock()
 
         self.load_posts()
         self.calc_post_stats()
@@ -31,7 +38,7 @@ class Blogdata(object):
 
         self.posts.sort(key=lambda p: get_dt(p), reverse=True)
 
-        self.posts_by_slug = {(p.slug, p) for (pt,p) in self.posts if pt == 'blogpost'}
+        self.posts_by_slug = {p.slug : p for (pt,p) in self.posts if pt == 'blogpost'}
 
     def calc_post_stats(self):
         # Compute date archive months
@@ -60,6 +67,17 @@ class Blogdata(object):
             page = post.Post(f,self.config)
             pages.append(page)
         self.pages = pages
+
+    # TODO
+    def get_comments(self, slug):
+        with self.comment_lock:
+            comments_file = self.config.pathto(COMMENTS_FILENAME)
+            if not os.path.exists(comments_file):
+                comments = []
+            else:
+                with open(comments_file) as f:
+                    comments = yaml.load(f.read())
+            return [c for c in comments if c['slug'] == slug]
 
 
 

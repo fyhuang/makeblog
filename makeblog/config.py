@@ -12,6 +12,8 @@ class Config(object):
         self.filename = filename
         self.dirname = dirname
 
+        self.is_dynamic = False
+
         self.outputdir = os.path.normpath(os.path.join(self.dirname, cp.get('output', 'outputdir')))
 
     def get(self, section, key):

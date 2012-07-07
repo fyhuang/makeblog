@@ -8,7 +8,7 @@ import requests
 
 import post
 
-TWEETS_FILENAME='social/tweets.yaml'
+TWEETS_FILENAME='dynamic/tweets.yaml'
 
 proxies = {'http': '192.168.77.1:8123'}
 tco_re = re.compile('(?P<url>http://t.co/([\w]*))')

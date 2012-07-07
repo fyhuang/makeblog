@@ -47,13 +47,13 @@ Version 0.4 (planned):
     * WP import comments
     * Almost-static -- update pages on command, etc.
     * Pingbacks
+    * Generate new blog command
 
 Version 0.3 (planned):
     * Tutorial on how to use makeblog
     * Clean up config file structure
     * Friendlier user-interface
     * Make editor configurable
-    * Generate new blog command
 	* Edit blog post command
     * Sitemaps (for Google)
 

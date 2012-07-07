@@ -57,6 +57,18 @@ def compile_pages(blogdata):
         with open(outname, 'w') as f:
             f.write(page_content)
 
+def compile_post(blogdata, slug):
+    post = blogdata.posts_by_slug[slug]
+    date_dir = blogdata.config.outpathto(post.dt.strftime('%Y/%m'))
+    post_dir = os.path.join(date_dir, post.slug)
+    makedirs(post_dir)
+
+    tpl_content = blogdata.templates['blogpost_page'].render(post=post)
+    html_fname = os.path.join(post_dir, 'index.html')
+    with open(html_fname, 'w') as hf:
+        # TODO: write to temp file and replace
+        hf.write(tpl_content)
+
 def compile_posts_page(blogdata,
         tpl_name,
         out_name,
@@ -66,7 +78,7 @@ def compile_posts_page(blogdata,
 
     config = blogdata.config
 
-    print("Generating from {}".format(tpl_name))
+    #print("Generating from {}".format(tpl_name))
     filt_posts = [p for p in blogdata.posts if selector(p)]
     if maxnum > 0:
         filt_posts = utils.first_posts(filt_posts, maxnum)
@@ -126,6 +138,7 @@ def compile_dt_archive(blogdata, year, month):
 
 def compile_all(config):
     makedirs(config.outpathto(''))
+    makedirs(config.pathto('dynamic'))
 
     compile_assets(config)
 
@@ -165,3 +178,6 @@ DirectoryIndex atom.xml
 
     # Pages
     compile_pages(blogdata)
+
+def compile_sitemap(blogdata):
+    pass
