@@ -107,4 +107,16 @@ def get_blogposts(config):
             print("Loading post " + f)
             post = Post(os.path.join(dirpath, f), config)
             posts.append(post)
+
+    # Load drafts
+    if config.getdef('output', 'publish_drafts', False):
+        for (dirpath, dirnames, filenames) in os.walk(config.pathto('drafts')):
+            for f in filenames:
+                if f[-2:] != 'md':
+                    print("Skipping " + f)
+                    continue
+                print("Loading drafts " + f)
+                post = Post(os.path.join(dirpath, f), config)
+                posts.append(post)
+
     return [('blogpost',p) for p in posts]

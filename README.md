@@ -48,6 +48,7 @@ Version 0.4 (planned):
     * Almost-static -- update pages on command, etc.
     * Pingbacks
     * Generate new blog command
+    * Custom text on tag pages
 
 Version 0.3 (planned):
     * Tutorial on how to use makeblog
@@ -55,7 +56,6 @@ Version 0.3 (planned):
     * Friendlier user-interface
     * Make editor configurable
 	* Edit blog post command
-    * Sitemaps (for Google)
 
 Version 0.2 (2012/5/25):
 	* Archive by date

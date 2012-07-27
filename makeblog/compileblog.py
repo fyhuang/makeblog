@@ -48,6 +48,10 @@ def compile_pages(blogdata):
 
     print("Generating pages")
     for p in blogdata.pages:
+        if p.slug.startswith("_"):
+            print("Skipping page {}".format(p.title))
+            continue
+
         title = p.title
         html_content = p.get_html_content()
         page_content = blogdata.templates['page'].render(title=title, html_content=html_content)
@@ -147,14 +151,11 @@ def compile_all(config):
     print("Writing posts")
     for (ptype, post) in blogdata.posts:
         if ptype != 'blogpost': continue
-        date_dir = config.outpathto(post.dt.strftime('%Y/%m'))
-        post_dir = os.path.join(date_dir, post.slug)
-        makedirs(post_dir)
-
-        tpl_content = blogdata.templates['blogpost_page'].render(post=post)
-        html_fname = os.path.join(post_dir, 'index.html')
-        with open(html_fname, 'w') as hf:
-            hf.write(tpl_content)
+        try:
+            compile_post(blogdata, post.slug)
+        except UnicodeDecodeError:
+            print("Decoding error when compiling post {}".format(post.slug))
+            raise
 
     compile_index(blogdata)
 

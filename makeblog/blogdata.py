@@ -67,6 +67,7 @@ class Blogdata(object):
             page = post.Post(f,self.config)
             pages.append(page)
         self.pages = pages
+        self.pages_by_name = {p.slug : p for p in self.pages}
 
     # TODO
     def get_comments(self, slug):
